@@ -2,8 +2,8 @@ from pathlib import Path
 
 from pandas import DataFrame, ExcelFile, concat, read_excel
 from plotly.graph_objs import Figure
-from plotly.express import bar
-
+from plotly.express import bar, line
+import pandas as pd
 
 # Columns
 SHEET_NAME = "Sheet Name"
@@ -17,6 +17,21 @@ PROJECT = "Project"
 # Filters
 HOUSE_IMPROVEMENT = "House/Improvement"
 
+MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+]
+
 
 class DataLoader:
     def __init__(self, workbook_path: Path) -> None:
@@ -26,18 +41,33 @@ class DataLoader:
         fast_food_rows = self.df[
             self.df[VENDER].str.contains("Fast Food", case=False, na=False)
         ]
+
         sum_by_sheet = fast_food_rows.groupby(SHEET_NAME, as_index=False)[AMOUNT].sum()
         sum_by_sheet[AMOUNT] = sum_by_sheet[AMOUNT].round(2)
         sum_by_sheet["Fast_Food_Amount"] = sum_by_sheet[AMOUNT].abs()
-        fig1 = bar(
+
+        # Convert YYMMDD → datetime
+        sum_by_sheet["Date"] = pd.to_datetime(sum_by_sheet[SHEET_NAME], format="%y%m%d")
+
+        # Extract year + month
+        sum_by_sheet["Year"] = sum_by_sheet["Date"].dt.year
+        sum_by_sheet["MonthNum"] = sum_by_sheet["Date"].dt.month
+        sum_by_sheet["Month"] = sum_by_sheet["Date"].dt.strftime("%b")
+
+        # Sort by year then month number
+        sum_by_sheet = sum_by_sheet.sort_values(by=["Year", "MonthNum"])  # type: ignore
+
+        # Line chart with one line per year
+        fig1 = line(
             sum_by_sheet,
-            x=SHEET_NAME,
+            x="Month",
             y="Fast_Food_Amount",
-            color="Fast_Food_Amount",
-            color_continuous_scale="Reds",
+            color="Year",
+            markers=True,
             title="Fast Food Amount by Month",
             template="plotly_dark",
-            labels={"Fast_Food_Amount": "Dollars", SHEET_NAME: "Month"},
+            labels={"Fast_Food_Amount": "Dollars", "Month": "Month", "Year": "Year"},
+            category_orders={"Month": MONTHS},
         )
         return [fig1]
 
