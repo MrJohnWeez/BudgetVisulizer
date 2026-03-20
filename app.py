@@ -15,7 +15,10 @@ def run_app() -> None:
     app.layout = html.Div(
         [
             html.Div(
-                [dcc.Graph(figure=fig, className="graph") for fig in plots],
+                [
+                    dcc.Graph(figure=fig, className="graph", style={"width": "100%"})
+                    for fig in plots
+                ],
                 className="grid-container",
             )
         ]
@@ -28,5 +31,5 @@ def open_browser():
 
 
 if __name__ == "__main__":
-    Timer(1, open_browser).start()
+    # Timer(1, open_browser).start()
     run_app()
