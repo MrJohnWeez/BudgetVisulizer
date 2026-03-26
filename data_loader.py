@@ -174,21 +174,38 @@ def _yearly_pie_charts(
         # Skip empty years
         if grouped.empty:
             continue
+
+        total = grouped[Column.AMOUNT].sum()
+        percentages = grouped[Column.AMOUNT] / total
+
+        # Build custom text labels
+        text = [
+            f"{label}" if p >= 0.005 else ""
+            for label, p in zip(grouped[column], percentages)
+        ]
+
         fig = pie(
             grouped,
             names=column,
             values=Column.AMOUNT,
-            title=f"{column} Breakdown - {year}",
+            title=f"{column.value} - {year}",
             template="plotly_dark",
         )
         fig.update_traces(
-            textinfo="label",
+            textinfo="text",
             hovertemplate=(
-                f"{column}: %{{label}}<br>"
+                "%{label}<br>"
                 "Amount: $%{value:.2f}<br>"
                 "Percent: %{percent}"
                 "<extra></extra>"
             ),
+            text=text,
+        )
+        fig.update_layout(
+            margin=dict(t=80, b=20, l=50, r=50),  # Increase top (t) margin for title
+            height=700,
+            uniformtext_minsize=10,
+            uniformtext_mode="hide",
         )
         figures.append(fig)
 
@@ -236,7 +253,7 @@ def _sum_bargraph(
         x="Month",
         y="Fast_Food_Amount",
         color="Year",
-        title=f"{sort_item} Amount by Month",
+        title=f"{sort_item.value} Amount by Month",
         template="plotly_dark",
         labels={
             "Fast_Food_Amount": "Dollars",
