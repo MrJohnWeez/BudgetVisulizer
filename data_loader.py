@@ -147,10 +147,11 @@ class DataLoader:
     def __init__(self, workbook_path: Path) -> None:
         self.df = _load_dataframe(workbook_path)
 
-    def get_plots(self) -> list[Figure]:
-        plots = [_sum_bargraph(self.df, Column.VENDER, Vender.FAST_FOOD)]
-        plots += _yearly_pie_charts(self.df, Column.VENDER)
-        return plots
+    def get_vender_plots(self):
+        return [_sum_bargraph(self.df, Column.VENDER, Vender.FAST_FOOD)]
+
+    def get_yearly_pie_charts(self):
+        return _yearly_pie_charts(self.df, Column.VENDER)
 
 
 def _yearly_pie_charts(
