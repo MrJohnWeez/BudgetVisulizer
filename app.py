@@ -6,7 +6,7 @@ from dash import Dash, dcc, html
 from data_loader import DataLoader
 
 WORKBOOK_NAME = "Assets/Budget.xlsx"
-REDACT_VALUES = True
+REDACT_VALUES = False
 
 
 def run_app() -> None:
@@ -15,6 +15,8 @@ def run_app() -> None:
     app.layout = html.Div(
         [
             _create_plot_section("Custom Plots", data_loader.get_line_plots()),
+            # net positive or negative chart
+            # Treemap chart of total into house
             _create_plot_section("Vender Plots", data_loader.get_vender_plots()),
             _create_plot_section(
                 "Yearly Vender Summary", data_loader.get_vender_pie_charts()
