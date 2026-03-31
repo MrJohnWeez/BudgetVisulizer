@@ -14,10 +14,8 @@ def run_app() -> None:
     app = Dash(__name__)
     app.layout = html.Div(
         [
-            _create_plot_section("Custom Plots", data_loader.get_line_plots()),
-            # net positive or negative chart
-            # Treemap chart of total into house
-            _create_plot_section("Vender Plots", data_loader.get_vender_plots()),
+            # Create text stats
+            _create_plot_section("Plots", data_loader.get_plots()),
             _create_plot_section(
                 "Yearly Vender Summary", data_loader.get_vender_pie_charts()
             ),

@@ -2,11 +2,10 @@ from pathlib import Path
 
 from pandas import DataFrame, concat
 from plotly.graph_objs import Figure
-from plotly.express import line, bar, pie
+from plotly.express import line, bar, pie, treemap
 import pandas as pd
 
 from spreadsheet_items import (
-    MONTHS,
     Category,
     Column,
     PaymentType,
@@ -21,9 +20,26 @@ class DataLoader:
         self.df = _load_dataframe(workbook_path)
         self.redact_values = redact_values
 
-    def get_line_plots(self) -> list[Figure]:
+    def get_plots(self) -> list[Figure]:
         return [
-            _sum_line_graph(
+            _monthly_net_bar_graph(
+                self.df,
+                Column.PAYMENT_TYPE,
+                [p for p in PaymentType],
+                "Monthly Net",
+                self.redact_values,
+            ),
+            _treemap(
+                self.df,
+                Column.PROJECT,
+                [p for p in Project],
+                Column.CATEGORY,
+                [Category.TOOLS],
+                "Total Spent On House",
+                "House Project Total",
+                self.redact_values,
+            ),
+            _monthly_line_graph(
                 self.df,
                 Column.CATEGORY,
                 [
@@ -36,28 +52,21 @@ class DataLoader:
                 "Utility Cost",
                 self.redact_values,
             ),
-            _sum_line_graph(
-                self.df,
-                Column.CATEGORY,
-                [Category.HOUSE_IMPROVEMENT, Category.TOOLS, Category.APPLIANCES],
-                "House Spending",
-                self.redact_values,
-            ),
-            _sum_line_graph(
+            _monthly_line_graph(
                 self.df,
                 Column.CATEGORY,
                 [Category.FOOD, Category.TAKEOUT],
                 "Food Costs",
                 self.redact_values,
             ),
-            _sum_line_graph(
+            _monthly_line_graph(
                 self.df,
                 Column.CATEGORY,
                 [Category.CAR_GAS, Category.TRAILER],
                 "Car & Trailer Costs",
                 self.redact_values,
             ),
-            _sum_line_graph(
+            _monthly_stacked_bar_graph(
                 self.df,
                 Column.VENDER,
                 [
@@ -76,7 +85,7 @@ class DataLoader:
                 "Stores",
                 self.redact_values,
             ),
-            _sum_line_graph(
+            _monthly_line_graph(
                 self.df,
                 Column.VENDER,
                 [
@@ -90,32 +99,13 @@ class DataLoader:
                 "Subscriptions",
                 self.redact_values,
             ),
-            _sum_line_graph(
+            _monthly_stacked_bar_graph(
                 self.df,
                 Column.PROJECT,
                 [p for p in Project],
                 "House Projects",
                 self.redact_values,
             ),
-        ]
-
-    def get_vender_plots(self) -> list[Figure]:
-        return [
-            _sum_bargraph(self.df, Column.VENDER, Vender.FAST_FOOD, self.redact_values),
-            _sum_bargraph(self.df, Column.VENDER, Vender.ALTAFIBER, self.redact_values),
-            _sum_bargraph(self.df, Column.VENDER, Vender.AMAZON, self.redact_values),
-            _sum_bargraph(self.df, Column.VENDER, Vender.BANK, self.redact_values),
-            _sum_bargraph(
-                self.df, Column.VENDER, Vender.DUKE_ENERGY, self.redact_values
-            ),
-            _sum_bargraph(self.df, Column.VENDER, Vender.GCWW, self.redact_values),
-            _sum_bargraph(
-                self.df, Column.VENDER, Vender.HOME_DEPOT, self.redact_values
-            ),
-            _sum_bargraph(self.df, Column.VENDER, Vender.KROGER, self.redact_values),
-            _sum_bargraph(self.df, Column.VENDER, Vender.LOWES, self.redact_values),
-            _sum_bargraph(self.df, Column.VENDER, Vender.MENARDS, self.redact_values),
-            _sum_bargraph(self.df, Column.VENDER, Vender.SAMS, self.redact_values),
         ]
 
     def get_vender_pie_charts(self) -> list[Figure]:
@@ -131,7 +121,151 @@ class DataLoader:
         return _yearly_pie_charts(self.df, Column.CATEGORY, self.redact_values)
 
 
-def _sum_line_graph(
+def _monthly_net_bar_graph(
+    df: DataFrame,
+    column: Column,
+    sort_items: list[Vender | PaymentType | Category | Project],
+    title: str,
+    redact_values: bool,
+) -> Figure:
+    values = [item.value for item in sort_items]
+    filtered = df[df[column].isin(values)].copy()
+
+    filtered["Date"] = pd.to_datetime(filtered[Column.SHEET_NAME], format="%y%m%d")
+    filtered["MonthDate"] = filtered["Date"].dt.to_period("M").dt.to_timestamp()
+
+    # Net sum per month (can be positive or negative)
+    sum_by_month = filtered.groupby("MonthDate", as_index=False)[Column.AMOUNT].sum()
+    sum_by_month = sum_by_month.sort_values("MonthDate")  # type: ignore
+
+    sum_by_month["Amount"] = sum_by_month[Column.AMOUNT].round(2)
+
+    # Color based on sign
+    sum_by_month["Color"] = sum_by_month["Amount"].apply(
+        lambda x: "Positive" if x >= 0 else "Negative"
+    )
+
+    fig = bar(
+        sum_by_month,
+        x="MonthDate",
+        y="Amount",
+        color="Color",
+        title=title,
+        template="plotly_dark",
+        labels={
+            "MonthDate": "Date",
+            "Amount": "Net Dollars",
+        },
+        color_discrete_map={
+            "Positive": "green",
+            "Negative": "red",
+        },
+    )
+
+    fig.update_traces(hovertemplate="Date: %{x|%b %Y}<br>Net: %{y}<extra></extra>")
+
+    # Ensure consistent legend order
+    fig.update_layout(legend_title_text="")
+
+    if redact_values:
+        _redact_values(fig)
+
+    return fig
+
+
+def _treemap(
+    df: DataFrame,
+    column: Column,
+    sort_items: list[Vender | PaymentType | Category | Project],
+    exclude_column: Column,
+    exclude_items: list[Vender | PaymentType | Category | Project],
+    title: str,
+    root_title: str,
+    redact_values: bool,
+) -> Figure:
+    include_values = [item.value for item in sort_items]
+    exclude_values = [item.value for item in exclude_items]
+
+    # Apply filtering
+    filtered = df[
+        df[column].isin(include_values) & ~df[exclude_column].isin(exclude_values)
+    ].copy()
+
+    # Aggregate totals
+    grouped = filtered.groupby(column, as_index=False)[Column.AMOUNT].sum()
+    grouped["Amount"] = grouped[Column.AMOUNT].abs().round(2)
+
+    # Build hierarchy
+    grouped["Parent"] = root_title
+    grouped["Label"] = grouped[column]
+
+    treemap_df = grouped[["Parent", "Label", "Amount"]].copy()
+
+    fig = treemap(
+        treemap_df,
+        path=["Parent", "Label"],
+        values="Amount",
+        title=title,
+        template="plotly_dark",
+    )
+
+    fig.update_traces(
+        hovertemplate="Category: %{label}<br>Total: %{value}<extra></extra>"
+    )
+
+    if redact_values:
+        _redact_values(fig)
+
+    return fig
+
+
+def _monthly_stacked_bar_graph(
+    df: DataFrame,
+    column: Column,
+    sort_items: list[Vender | PaymentType | Category | Project],
+    title: str,
+    redact_values: bool,
+) -> Figure:
+    values = [item.value for item in sort_items]
+    filtered = df[df[column].isin(values)].copy()
+
+    filtered["Date"] = pd.to_datetime(filtered[Column.SHEET_NAME], format="%y%m%d")
+    filtered["MonthDate"] = filtered["Date"].dt.to_period("M").dt.to_timestamp()
+    filtered["Item"] = filtered[column]
+
+    # Group by month AND item (needed for traces)
+    sum_by_month = filtered.groupby(["MonthDate", "Item"], as_index=False)[
+        Column.AMOUNT
+    ].sum()
+
+    sum_by_month["Amount"] = sum_by_month[Column.AMOUNT].abs().round(2)
+    sum_by_month = sum_by_month.sort_values("MonthDate")  # type: ignore
+
+    # Bar chart with traces per item
+    fig = bar(
+        sum_by_month,
+        x="MonthDate",
+        y="Amount",
+        color="Item",
+        title=title,
+        template="plotly_dark",
+        labels={
+            "MonthDate": "Date",
+            "Amount": "Dollars",
+            "Item": "Category",
+        },
+    )
+    fig.update_traces(
+        hovertemplate="Item: %{fullData.name}<br>Date: %{x|%b %Y}<br>Amount: %{y}<extra></extra>"
+    )
+    fig.update_layout(barmode="stack")
+    if redact_values:
+        _redact_values(fig)
+
+    return fig
+
+
+def _monthly_line_graph(
     df: DataFrame,
     column: Column,
     sort_items: list[Vender | PaymentType | Category | Project],
@@ -229,49 +363,6 @@ def _yearly_pie_charts(
         figures.append(fig)
 
     return figures
-
-
-def _sum_bargraph(
-    df: DataFrame,
-    column: Column,
-    sort_item: Vender | PaymentType | Category | Project,
-    redact_values: bool,
-) -> Figure:
-    fast_food_rows = df[df[column].str.contains(sort_item, case=False, na=False)]
-
-    # Extract year and month
-    fast_food_rows["Date"] = pd.to_datetime(
-        fast_food_rows[Column.SHEET_NAME], format="%y%m%d"
-    )
-    fast_food_rows["Year"] = fast_food_rows["Date"].dt.year.astype(str)
-    fast_food_rows["MonthNum"] = fast_food_rows["Date"].dt.month
-    fast_food_rows["Month"] = fast_food_rows["Date"].dt.strftime("%b")
-
-    # Create group
-    sum_by_sheet = fast_food_rows.groupby(
-        ["Year", "Month", "MonthNum"], as_index=False
-    )[Column.AMOUNT].sum()
-    sum_by_sheet["Fast_Food_Amount"] = sum_by_sheet[Column.AMOUNT].abs().round(2)
-    sum_by_sheet = sum_by_sheet.sort_values(by=["Year", "MonthNum"])  # type: ignore
-
-    # Line chart with one line per year
-    fig1 = bar(
-        sum_by_sheet,
-        x="Month",
-        y="Fast_Food_Amount",
-        color="Year",
-        title=f"{sort_item.value} Amount by Month",
-        template="plotly_dark",
-        labels={"Fast_Food_Amount": "Dollars", "Month": "Month", "Year": "Year"},
-        category_orders={"Month": MONTHS},
-    )
-    fig1.update_layout(barmode="stack")
-    fig1.update_traces(
-        hovertemplate="Year: %{fullData.name}<br>Amount: %{y}<extra></extra>"
-    )
-    if redact_values:
-        _redact_values(fig1)
-    return fig1
 
 
 def _redact_values(fig1: Figure):

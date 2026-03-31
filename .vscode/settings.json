@@ -16,9 +16,13 @@
         "MENARDS",
         "RUMPKE",
         "SAMS",
+        "showticklabels",
         "textinfo",
         "textposition",
         "texttemplate",
-        "WIDTHHOLD"
+        "treemap",
+        "uniformtext",
+        "WIDTHHOLD",
+        "yaxes"
     ]
 }
