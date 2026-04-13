@@ -47,21 +47,22 @@ def _create_plot_section(title: str, plots: list[Figure]) -> html.Div:
     )
 
 
+def _stat_pill(label: str, value: str) -> html.Div:
+    return html.Div(
+        [
+            html.Span(f"{label}: ", className="stat-title"),
+            html.Span(value, className="stat-value"),
+        ],
+        className="stat-pill",
+    )
+
+
 def _create_stats_section(title: str, values: list[tuple[str, str]]) -> html.Div:
     return html.Div(
         [
             html.Div(title, className="title-bar"),
             html.Div(
-                [
-                    html.Div(
-                        [
-                            html.Span(f"{label}: ", className="stat-title stat-value"),
-                            html.Span(value, className="stat-value"),
-                        ],
-                        className="stat-pill",
-                    )
-                    for label, value in values
-                ],
+                [_stat_pill(label, value) for label, value in values],
                 className="grid-container grid-container-single",
             ),
         ],
@@ -74,5 +75,4 @@ def open_browser():
 
 
 if __name__ == "__main__":
-    # Timer(1, open_browser).start()
     run_app()

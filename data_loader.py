@@ -122,7 +122,7 @@ class DataLoader:
 
     def get_stats(self) -> list[tuple[str, str]]:
         return [
-            ("Title", "value\ntest"),
+            ("Title", "value\ntest\ntest\ntest"),
             ("Title", "value"),
             ("Title", "value"),
             ("Title", "value"),
