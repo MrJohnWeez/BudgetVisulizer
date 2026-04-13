@@ -120,6 +120,17 @@ class DataLoader:
     def get_category_pie_charts(self) -> list[Figure]:
         return _yearly_pie_charts(self.df, Column.CATEGORY, self.redact_values)
 
+    def get_stats(self) -> list[tuple[str, str]]:
+        return [
+            ("Title", "value\ntest"),
+            ("Title", "value"),
+            ("Title", "value"),
+            ("Title", "value"),
+            ("Title", "value"),
+            ("Title", "value"),
+            ("Title", "value"),
+        ]
+
 
 def _monthly_net_bar_graph(
     df: DataFrame,

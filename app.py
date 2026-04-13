@@ -14,7 +14,7 @@ def run_app() -> None:
     app = Dash(__name__)
     app.layout = html.Div(
         [
-            # Create text stats
+            _create_stats_section("Stats", data_loader.get_stats()),
             _create_plot_section("Plots", data_loader.get_plots()),
             _create_plot_section(
                 "Yearly Vender Summary", data_loader.get_vender_pie_charts()
@@ -41,6 +41,28 @@ def _create_plot_section(title: str, plots: list[Figure]) -> html.Div:
             html.Div(
                 [dcc.Graph(figure=fig, className="graph") for fig in plots],
                 className="grid-container",
+            ),
+        ],
+        className="section",
+    )
+
+
+def _create_stats_section(title: str, values: list[tuple[str, str]]) -> html.Div:
+    return html.Div(
+        [
+            html.Div(title, className="title-bar"),
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Span(f"{label}: ", className="stat-title stat-value"),
+                            html.Span(value, className="stat-value"),
+                        ],
+                        className="stat-pill",
+                    )
+                    for label, value in values
+                ],
+                className="grid-container grid-container-single",
             ),
         ],
         className="section",

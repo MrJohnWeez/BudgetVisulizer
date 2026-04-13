@@ -3,9 +3,33 @@
   --bg-dark: #1e1e1e;
   --border-dark: #2a2a2a;
   --accent-blue: #4ea1ff;
+  --highlight-blue: #3b8de0;
+  --text: #ffffff;
   --radius: 20px;
+  --font-size: 20px;
+  --bold: 600;
   background: var(--bg-darker);
   overflow: hidden;
+}
+
+.stat-pill {
+    display: inline-flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 15px;
+    margin: 10px;
+    background-color: var(--bg-darker);
+    border: 1px solid var(--bg-dark);
+}
+.stat-value {
+    font-size: var(--font-size);
+    color: var(--text);
+    white-space: pre-line;
+}
+.stat-title {
+    font-weight: var(--bold);
+    white-space: nowrap;
 }
 
 .scroll-container {
@@ -28,7 +52,7 @@
   border-radius: 10px;
 }
 .scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #3b8de0;
+  background: var(--highlight-blue);
 }
 .scroll-container {
   scrollbar-width: thin;
@@ -44,13 +68,16 @@
   grid-template-columns: repeat(2, 1fr);
   background: var(--bg-dark);
   margin-top: -1px;
+  padding: 20px;
   border-bottom-left-radius: var(--radius);
   border-bottom-right-radius: var(--radius);
 }
+.grid-container-single {
+  grid-template-columns: repeat(1, 1fr);
+}
 .graph {
   display: inline-block;
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 10px;
   break-inside: avoid;
   height: 700px;
   overflow: hidden;
@@ -63,7 +90,7 @@
   align-items: center;
   justify-content: center;
   font-size: 35px;
-  font-weight: 600;
+  font-weight: var(--bold);
   border-bottom: 1px solid var(--border-dark);
   border-top-left-radius: var(--radius);
   border-top-right-radius: var(--radius);
