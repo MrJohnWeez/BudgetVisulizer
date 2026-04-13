@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from pandas import DataFrame, concat
-from plotly.graph_objs import Figure
-from plotly.express import line, bar, pie, treemap
 import pandas as pd
+from pandas import DataFrame, concat
+from plotly.express import bar, line, pie, treemap
+from plotly.graph_objs import Figure
 
 from spreadsheet_items import (
     Category,
@@ -198,9 +198,7 @@ def _treemap(
     exclude_values = [item.value for item in exclude_items]
 
     # Apply filtering
-    filtered = df[
-        df[column].isin(include_values) & ~df[exclude_column].isin(exclude_values)
-    ].copy()
+    filtered = df[df[column].isin(include_values) & ~df[exclude_column].isin(exclude_values)].copy()
 
     # Aggregate totals
     grouped = filtered.groupby(column, as_index=False)[Column.AMOUNT].sum()
@@ -220,9 +218,7 @@ def _treemap(
         template="plotly_dark",
     )
 
-    fig.update_traces(
-        hovertemplate="Category: %{label}<br>Total: %{value}<extra></extra>"
-    )
+    fig.update_traces(hovertemplate="Category: %{label}<br>Total: %{value}<extra></extra>")
 
     if redact_values:
         _redact_values(fig)
@@ -245,9 +241,7 @@ def _monthly_stacked_bar_graph(
     filtered["Item"] = filtered[column]
 
     # Group by month AND item (needed for traces)
-    sum_by_month = filtered.groupby(["MonthDate", "Item"], as_index=False)[
-        Column.AMOUNT
-    ].sum()
+    sum_by_month = filtered.groupby(["MonthDate", "Item"], as_index=False)[Column.AMOUNT].sum()
 
     sum_by_month["Amount"] = sum_by_month[Column.AMOUNT].abs().round(2)
     sum_by_month = sum_by_month.sort_values("MonthDate")  # type: ignore
@@ -290,9 +284,7 @@ def _monthly_line_graph(
     filtered["Item"] = filtered[column]
 
     # Group by month and item
-    sum_by_month = filtered.groupby(["MonthDate", "Item"], as_index=False)[
-        Column.AMOUNT
-    ].sum()
+    sum_by_month = filtered.groupby(["MonthDate", "Item"], as_index=False)[Column.AMOUNT].sum()
     sum_by_month["Amount"] = sum_by_month[Column.AMOUNT].abs().round(2)
     sum_by_month = sum_by_month.sort_values("MonthDate")  # type: ignore
 
@@ -343,7 +335,7 @@ def _yearly_pie_charts(
         # Build custom text labels
         text = [
             f"{label}" if p >= 0.005 else ""
-            for label, p in zip(grouped[column], percentages)
+            for label, p in zip(grouped[column], percentages, strict=False)
         ]
 
         fig = pie(
@@ -356,10 +348,7 @@ def _yearly_pie_charts(
         fig.update_traces(
             textinfo="text",
             hovertemplate=(
-                "%{label}<br>"
-                "Amount: $%{value:.2f}<br>"
-                "Percent: %{percent}"
-                "<extra></extra>"
+                "%{label}<br>Amount: $%{value:.2f}<br>Percent: %{percent}<extra></extra>"
             ),
             text=text,
         )
@@ -390,8 +379,5 @@ def _load_dataframe(workbook_path: Path) -> DataFrame:
     print(f"{count} sheets spanning from {min_val}-{max_val}")
 
     # Add sheet name column and combine
-    dfs = [
-        df.assign(**{Column.SHEET_NAME.value: name})
-        for name, df in numeric_sheets.items()
-    ]
+    dfs = [df.assign(**{Column.SHEET_NAME.value: name}) for name, df in numeric_sheets.items()]
     return concat(dfs, ignore_index=True)

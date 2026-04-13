@@ -1,8 +1,9 @@
-from pathlib import Path
 import webbrowser
+from pathlib import Path
 
-from plotly.graph_objs import Figure
 from dash import Dash, dcc, html
+from plotly.graph_objs import Figure
+
 from data_loader import DataLoader
 
 WORKBOOK_NAME = "Assets/Budget.xlsx"
@@ -16,18 +17,12 @@ def run_app() -> None:
         [
             _create_stats_section("Stats", data_loader.get_stats()),
             _create_plot_section("Plots", data_loader.get_plots()),
-            _create_plot_section(
-                "Yearly Vender Summary", data_loader.get_vender_pie_charts()
-            ),
-            _create_plot_section(
-                "Yearly Category Summary", data_loader.get_category_pie_charts()
-            ),
+            _create_plot_section("Yearly Vender Summary", data_loader.get_vender_pie_charts()),
+            _create_plot_section("Yearly Category Summary", data_loader.get_category_pie_charts()),
             _create_plot_section(
                 "Yearly Payment Summary", data_loader.get_payment_type_pie_charts()
             ),
-            _create_plot_section(
-                "Yearly Project Summary", data_loader.get_project_pie_charts()
-            ),
+            _create_plot_section("Yearly Project Summary", data_loader.get_project_pie_charts()),
         ],
         className="scroll-container",
     )

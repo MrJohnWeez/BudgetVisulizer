@@ -1,7 +1,7 @@
 [project]
 name = "budgetvisulizer"
 version = "0.1.0"
-description = "Add your description here"
+description = "Simple scripts to visualize monthly budgets"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -10,3 +10,56 @@ dependencies = [
     "pandas>=3.0.1",
     "plotly>=6.6.0",
 ]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "UP",
+]
+ignore = [
+    "E501",   # handled by formatter
+    "B008",   # common in Dash callbacks (default arg in functions)
+    "B006",   # mutable defaults often appear in Dash configs
+    "F841",   # often noisy in callback-heavy pipelines (unused locals)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/callbacks/*.py" = [
+    "F811",  # redefined functions (common with Dash callbacks)
+]
+"**/app.py" = [
+    "F401",  # unused imports (Dash imports often required implicitly)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "standard"
+
+include = ["."]
+exclude = [
+    "**/__pycache__",
+    "**/.venv",
+    "**/dist",
+    "**/build"]
+
+reportMissingImports = true

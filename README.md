@@ -1,1 +1,1 @@
-Grab budget workbook data, parse though using Pandas, then generate Plotly plots in a single window.
+Grab budget workbook data, parse though using Pandas, then generate Plotly plots in a webpage window using Dash.
