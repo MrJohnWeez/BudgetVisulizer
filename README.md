@@ -1,1 +1,12 @@
-Grab budget workbook data, parse though using Pandas, then generate Plotly plots in a webpage window using Dash.
+
+# Budget Visualizer
+
+Quick python project that:
+- Grabs budget workbook data
+- Parses data using Pandas
+- Generate webpage of data using Dash
+- Allows for Plotly plots and useful labels.
+
+# Run
+
+`uv run app.py --file Assets/Budget.xlsx`

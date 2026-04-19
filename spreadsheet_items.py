@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class Column(str, Enum):
+class Column(StrEnum):
     ENTRY = "Entry"
     AMOUNT = "Amount"
     VENDER = "Vender"
@@ -11,7 +11,7 @@ class Column(str, Enum):
     SHEET_NAME = "Sheet Name"
 
 
-class Vender(str, Enum):
+class Vender(StrEnum):
     HOME_DEPOT = "Home Depot"
     AMAZON = "Amazon"
     KROGER = "Kroger"
@@ -54,7 +54,7 @@ class Vender(str, Enum):
     CABINETS_COM = "Cabinets com"
 
 
-class PaymentType(str, Enum):
+class PaymentType(StrEnum):
     CAPITALONE_MASTER = "CapitalOne Master"
     GEVISA = "GEVisa"
     ECHECK = "ECheck"
@@ -63,7 +63,7 @@ class PaymentType(str, Enum):
     WIDTHHOLD = "Widthhold"
 
 
-class Category(str, Enum):
+class Category(StrEnum):
     HOUSE_IMPROVEMENT = "House/Improvement"
     FOOD = "Food"
     TAKEOUT = "Takeout"
@@ -94,7 +94,7 @@ class Category(str, Enum):
     GAMBLE = "Gamble"
 
 
-class Project(str, Enum):
+class Project(StrEnum):
     HOUSE_PAINT = "House Paint"
     HOUSE_ROOF = "House Roof"
     HOUSE_YARD = "House Yard"

@@ -1,3 +1,4 @@
+import argparse
 import webbrowser
 from pathlib import Path
 
@@ -11,7 +12,18 @@ REDACT_VALUES = False
 
 
 def run_app() -> None:
-    data_loader = DataLoader(Path(WORKBOOK_NAME), REDACT_VALUES)
+    parser = argparse.ArgumentParser(description="Budget Visualizer")
+    parser.add_argument(
+        "--file",
+        type=str,
+        required=True,
+        help="Path to the Excel workbook",
+    )
+    args = parser.parse_args()
+    workbook_path = Path(args.file)
+
+    data_loader = DataLoader(workbook_path, REDACT_VALUES)
+    data_loader.load_data()
     app = Dash(__name__)
     app.layout = html.Div(
         [

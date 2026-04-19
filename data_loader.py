@@ -1,5 +1,7 @@
 from pathlib import Path
+from typing import cast
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame, concat
 from plotly.express import bar, line, pie, treemap
@@ -17,8 +19,12 @@ from spreadsheet_items import (
 
 class DataLoader:
     def __init__(self, workbook_path: Path, redact_values: bool = False) -> None:
-        self.df = _load_dataframe(workbook_path)
+        self.workbook_path = workbook_path
         self.redact_values = redact_values
+        self.df = DataFrame()
+
+    def load_data(self):
+        self.df = _load_dataframe(self.workbook_path)
 
     def get_plots(self) -> list[Figure]:
         return [
@@ -122,14 +128,31 @@ class DataLoader:
 
     def get_stats(self) -> list[tuple[str, str]]:
         return [
-            ("Title", "value\ntest\ntest\ntest"),
-            ("Title", "value"),
-            ("Title", "value"),
-            ("Title", "value"),
-            ("Title", "value"),
-            ("Title", "value"),
-            ("Title", "value"),
+            ("Amount Spent on tools", f"${_sum_tools(self.df)}"),
         ]
+
+
+def _sum_tools(df: DataFrame) -> float:
+    tools_rows = df[df[Column.CATEGORY].str.contains("tools", case=False, na=False)]
+    total = tools_rows[Column.AMOUNT].sum()
+    return round(abs(total), 2)
+
+
+def _prepare_filtered_df(
+    df: DataFrame,
+    column: Column,
+    sort_items: list[Vender | PaymentType | Category | Project],
+) -> DataFrame:
+    values = [item.value for item in sort_items]
+    filtered = df.loc[df[column].isin(values)].copy()
+    filtered["Date"] = pd.to_datetime(filtered[Column.SHEET_NAME], format="%y%m%d", errors="coerce")
+    filtered["MonthDate"] = filtered["Date"].dt.to_period("M").dt.to_timestamp()
+    return filtered
+
+
+def _apply_redaction(fig: Figure, redact: bool) -> None:
+    if redact:
+        fig.update_yaxes(showticklabels=False)
 
 
 def _monthly_net_bar_graph(
@@ -139,48 +162,28 @@ def _monthly_net_bar_graph(
     title: str,
     redact_values: bool,
 ) -> Figure:
-    values = [item.value for item in sort_items]
-    filtered = df[df[column].isin(values)].copy()
-
-    filtered["Date"] = pd.to_datetime(filtered[Column.SHEET_NAME], format="%y%m%d")
-    filtered["MonthDate"] = filtered["Date"].dt.to_period("M").dt.to_timestamp()
-
-    # Net sum per month (can be positive or negative)
-    sum_by_month = filtered.groupby("MonthDate", as_index=False)[Column.AMOUNT].sum()
-    sum_by_month = sum_by_month.sort_values("MonthDate")  # type: ignore
-
-    sum_by_month["Amount"] = sum_by_month[Column.AMOUNT].round(2)
-
-    # Color based on sign
-    sum_by_month["Color"] = sum_by_month["Amount"].apply(
-        lambda x: "Positive" if x >= 0 else "Negative"
+    filtered = _prepare_filtered_df(df, column, sort_items)
+    grouped = (
+        filtered.groupby("MonthDate", as_index=False)
+        .agg(Amount=(Column.AMOUNT, "sum"))
+        .sort_values("MonthDate")
     )
-
+    grouped["Amount"] = grouped[Column.AMOUNT].round(2)
+    grouped["Color"] = np.where(grouped["Amount"] >= 0, "Positive", "Negative")
     fig = bar(
-        sum_by_month,
+        grouped,
         x="MonthDate",
         y="Amount",
         color="Color",
         title=title,
         template="plotly_dark",
-        labels={
-            "MonthDate": "Date",
-            "Amount": "Net Dollars",
-        },
-        color_discrete_map={
-            "Positive": "green",
-            "Negative": "red",
-        },
+        labels={"MonthDate": "Date", "Amount": "Net Dollars"},
+        color_discrete_map={"Positive": "green", "Negative": "red"},
     )
-
     fig.update_traces(hovertemplate="Date: %{x|%b %Y}<br>Net: %{y}<extra></extra>")
-
-    # Ensure consistent legend order
     fig.update_layout(legend_title_text="")
 
-    if redact_values:
-        _redact_values(fig)
-
+    _apply_redaction(fig, redact_values)
     return fig
 
 
@@ -194,35 +197,29 @@ def _treemap(
     root_title: str,
     redact_values: bool,
 ) -> Figure:
-    include_values = [item.value for item in sort_items]
-    exclude_values = [item.value for item in exclude_items]
-
-    # Apply filtering
-    filtered = df[df[column].isin(include_values) & ~df[exclude_column].isin(exclude_values)].copy()
-
-    # Aggregate totals
-    grouped = filtered.groupby(column, as_index=False)[Column.AMOUNT].sum()
-    grouped["Amount"] = grouped[Column.AMOUNT].abs().round(2)
-
-    # Build hierarchy
-    grouped["Parent"] = root_title
-    grouped["Label"] = grouped[column]
-
-    treemap_df = grouped[["Parent", "Label", "Amount"]].copy()
+    include_values = [i.value for i in sort_items]
+    exclude_values = [i.value for i in exclude_items]
+    filtered = df.loc[df[column].isin(include_values) & ~df[exclude_column].isin(exclude_values)]
+    grouped = (
+        filtered.groupby(column, as_index=False)[Column.AMOUNT]
+        .sum()
+        .assign(
+            Amount=lambda d: d[Column.AMOUNT].abs().round(2),
+            Parent=root_title,
+            Label=lambda d: d[column],
+        )
+    )
 
     fig = treemap(
-        treemap_df,
+        grouped,
         path=["Parent", "Label"],
         values="Amount",
         title=title,
         template="plotly_dark",
     )
-
     fig.update_traces(hovertemplate="Category: %{label}<br>Total: %{value}<extra></extra>")
 
-    if redact_values:
-        _redact_values(fig)
-
+    _apply_redaction(fig, redact_values)
     return fig
 
 
@@ -233,40 +230,31 @@ def _monthly_stacked_bar_graph(
     title: str,
     redact_values: bool,
 ) -> Figure:
-    values = [item.value for item in sort_items]
-    filtered = df[df[column].isin(values)].copy()
-
-    filtered["Date"] = pd.to_datetime(filtered[Column.SHEET_NAME], format="%y%m%d")
-    filtered["MonthDate"] = filtered["Date"].dt.to_period("M").dt.to_timestamp()
+    filtered = _prepare_filtered_df(df, column, sort_items)
     filtered["Item"] = filtered[column]
 
-    # Group by month AND item (needed for traces)
-    sum_by_month = filtered.groupby(["MonthDate", "Item"], as_index=False)[Column.AMOUNT].sum()
+    grouped = (
+        filtered.groupby(["MonthDate", "Item"], as_index=False)
+        .agg(Amount=(Column.AMOUNT, "sum"))
+        .sort_values("MonthDate")
+    )
+    grouped["Amount"] = grouped[Column.AMOUNT].abs().round(2)
 
-    sum_by_month["Amount"] = sum_by_month[Column.AMOUNT].abs().round(2)
-    sum_by_month = sum_by_month.sort_values("MonthDate")  # type: ignore
-
-    # Bar chart with traces per item
     fig = bar(
-        sum_by_month,
+        grouped,
         x="MonthDate",
         y="Amount",
         color="Item",
         title=title,
         template="plotly_dark",
-        labels={
-            "MonthDate": "Date",
-            "Amount": "Dollars",
-            "Item": "Category",
-        },
+        labels={"MonthDate": "Date", "Amount": "Dollars", "Item": "Category"},
     )
     fig.update_traces(
-        hovertemplate="Item: %{fullData.name}<br>Date: %{x|%b %Y}<br>Amount: %{y}<extra></extra>"
+        hovertemplate=("Item: %{fullData.name}<br>Date: %{x|%b %Y}<br>Amount: %{y}<extra></extra>")
     )
     fig.update_layout(barmode="stack")
-    if redact_values:
-        _redact_values(fig)
 
+    _apply_redaction(fig, redact_values)
     return fig
 
 
@@ -277,20 +265,16 @@ def _monthly_line_graph(
     title: str,
     redact_values: bool,
 ) -> Figure:
-    values = [item.value for item in sort_items]
-    filtered = df[df[column].isin(values)].copy()
-    filtered["Date"] = pd.to_datetime(filtered[Column.SHEET_NAME], format="%y%m%d")
-    filtered["MonthDate"] = filtered["Date"].dt.to_period("M").dt.to_timestamp()
+    filtered = _prepare_filtered_df(df, column, sort_items)
     filtered["Item"] = filtered[column]
-
-    # Group by month and item
-    sum_by_month = filtered.groupby(["MonthDate", "Item"], as_index=False)[Column.AMOUNT].sum()
-    sum_by_month["Amount"] = sum_by_month[Column.AMOUNT].abs().round(2)
-    sum_by_month = sum_by_month.sort_values("MonthDate")  # type: ignore
-
-    # Line plot with multiple traces
+    grouped = (
+        filtered.groupby(["MonthDate", "Item"], as_index=False)
+        .agg(Amount=(Column.AMOUNT, "sum"))
+        .sort_values("MonthDate")
+    )
+    grouped["Amount"] = grouped[Column.AMOUNT].abs().round(2)
     fig = line(
-        sum_by_month,
+        grouped,
         x="MonthDate",
         y="Amount",
         color="Item",
@@ -299,10 +283,9 @@ def _monthly_line_graph(
         labels={"MonthDate": "Date", "Amount": "Dollars", "Item": "Category"},
     )
     fig.update_traces(
-        hovertemplate="Item: %{fullData.name}<br>Date: %{x|%b %Y}<br>Amount: %{y}<extra></extra>"
+        hovertemplate=("Item: %{fullData.name}<br>Date: %{x|%b %Y}<br>Amount: %{y}<extra></extra>")
     )
-    if redact_values:
-        _redact_values(fig)
+    _apply_redaction(fig, redact_values)
     return fig
 
 
@@ -311,73 +294,73 @@ def _yearly_pie_charts(
     column: Column,
     redact_values: bool,
 ) -> list[Figure]:
-    figures: list[Figure] = []
-    options = get_options(column)
     df = df.copy()
-
     df["Date"] = pd.to_datetime(df[Column.SHEET_NAME], format="%y%m%d", errors="coerce")
     df["Year"] = df["Date"].dt.year
-    for year in sorted(df["Year"].dropna().unique()):
-        year_df = df[df["Year"] == year]
-        # Group by the category column (your "options")
+    options = get_options(column)
+    figures: list[Figure] = []
+
+    for year, year_df in df.groupby("Year"):
+        if pd.isna(year):
+            continue
         grouped = year_df.groupby(column, as_index=False)[Column.AMOUNT].sum()
-        # Optional: filter only valid options
         if options:
             grouped = grouped[grouped[column].isin(options)]
-        grouped[Column.AMOUNT] = grouped[Column.AMOUNT].abs().round(2)
-        # Skip empty years
         if grouped.empty:
             continue
 
-        total = grouped[Column.AMOUNT].sum()
-        percentages = grouped[Column.AMOUNT] / total
-
-        # Build custom text labels
+        grouped["Amount"] = grouped[Column.AMOUNT].abs().round(2)
+        total = grouped["Amount"].sum()
+        percentages = grouped["Amount"] / total
         text = [
-            f"{label}" if p >= 0.005 else ""
-            for label, p in zip(grouped[column], percentages, strict=False)
+            label if pct >= 0.005 else ""
+            for label, pct in zip(grouped[column], percentages, strict=False)
         ]
-
+        year_int = int(cast(int, year))
         fig = pie(
             grouped,
             names=column,
-            values=Column.AMOUNT,
-            title=f"{column.value} - {year}",
+            values="Amount",
+            title=f"{column.value} - {year_int}",
             template="plotly_dark",
         )
         fig.update_traces(
             textinfo="text",
+            text=text,
             hovertemplate=(
                 "%{label}<br>Amount: $%{value:.2f}<br>Percent: %{percent}<extra></extra>"
             ),
-            text=text,
         )
         fig.update_layout(
-            margin=dict(t=80, b=20, l=50, r=50),  # Increase top (t) margin for title
+            margin=dict(t=80, b=20, l=50, r=50),
             height=700,
             uniformtext_minsize=10,
             uniformtext_mode="hide",
         )
-        if redact_values:
-            _redact_values(fig)
+        _apply_redaction(fig, redact_values)
         figures.append(fig)
 
     return figures
 
 
-def _redact_values(fig1: Figure):
-    fig1.update_yaxes(showticklabels=False)
-
-
 def _load_dataframe(workbook_path: Path) -> DataFrame:
-    # Load all sheets at once (pandas auto-selects engine)
-    sheets: dict[str, DataFrame] = pd.read_excel(workbook_path, sheet_name=None)
-    numeric_sheets = {k: v for k, v in sheets.items() if k.isdigit()}
-    count = len(numeric_sheets)
-    min_val = min(numeric_sheets) if numeric_sheets else None
-    max_val = max(numeric_sheets) if numeric_sheets else None
-    print(f"{count} sheets spanning from {min_val}-{max_val}")
+    xls = pd.ExcelFile(workbook_path)
+    numeric_sheet_names = [s for s in xls.sheet_names if str(s).isdigit()]
+    if not numeric_sheet_names:
+        print("No numeric sheets found.")
+        return pd.DataFrame()
+    print(
+        f"{len(numeric_sheet_names)} sheets spanning from "
+        f"{min(numeric_sheet_names)}-{max(numeric_sheet_names)}"
+    )
 
-    # Add sheet name column and combine
-    dfs = [df.assign(**{Column.SHEET_NAME.value: name}) for name, df in numeric_sheets.items()]
+    dfs: list[DataFrame] = []
+    for name in numeric_sheet_names:
+        df = xls.parse(name)
+        # Normalize column names (prevents subtle bugs later)
+        df.columns = [str(c).strip() for c in df.columns]
+        # Add sheet name column
+        df[Column.SHEET_NAME.value] = name
+        dfs.append(df)
+
     return concat(dfs, ignore_index=True)
