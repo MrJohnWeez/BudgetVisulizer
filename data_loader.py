@@ -1,3 +1,5 @@
+"""Load and parse csv data."""
+
 from pathlib import Path
 from typing import cast
 
@@ -16,29 +18,36 @@ from spreadsheet_items import (
     get_options,
 )
 
+MIN_PIE_CHART_PERCENT = 0.005
+
 
 class DataLoader:
+    """Load workbook data and generate plots."""
+
     def __init__(self, workbook_path: Path, redact_values: bool = False) -> None:
+        """Create new DataLoader instance."""
         self.workbook_path = workbook_path
         self.redact_values = redact_values
         self.df = DataFrame()
 
-    def load_data(self):
+    def load_data(self) -> None:
+        """Load data into dataframe from workbook path."""
         self.df = _load_dataframe(self.workbook_path)
 
     def get_plots(self) -> list[Figure]:
+        """Generate list of plots based on loaded data."""
         return [
             _monthly_net_bar_graph(
                 self.df,
                 Column.PAYMENT_TYPE,
-                [p for p in PaymentType],
+                list(PaymentType),
                 "Monthly Net",
                 self.redact_values,
             ),
             _treemap(
                 self.df,
                 Column.PROJECT,
-                [p for p in Project],
+                list(Project),
                 Column.CATEGORY,
                 [Category.TOOLS],
                 "Total Spent On House",
@@ -108,25 +117,30 @@ class DataLoader:
             _monthly_stacked_bar_graph(
                 self.df,
                 Column.PROJECT,
-                [p for p in Project],
+                list(Project),
                 "House Projects",
                 self.redact_values,
             ),
         ]
 
     def get_vender_pie_charts(self) -> list[Figure]:
+        """Plot displaying vender pie charts."""
         return _yearly_pie_charts(self.df, Column.VENDER, self.redact_values)
 
     def get_payment_type_pie_charts(self) -> list[Figure]:
+        """Plot displaying payment pie charts."""
         return _yearly_pie_charts(self.df, Column.PAYMENT_TYPE, self.redact_values)
 
     def get_project_pie_charts(self) -> list[Figure]:
+        """Plot displaying project pie charts."""
         return _yearly_pie_charts(self.df, Column.PROJECT, self.redact_values)
 
     def get_category_pie_charts(self) -> list[Figure]:
+        """Plot displaying category pie charts."""
         return _yearly_pie_charts(self.df, Column.CATEGORY, self.redact_values)
 
     def get_stats(self) -> list[tuple[str, str]]:
+        """Generate titles and stats values within a list."""
         return [
             ("Amount Spent on tools", f"${_sum_tools(self.df)}"),
         ]
@@ -250,7 +264,7 @@ def _monthly_stacked_bar_graph(
         labels={"MonthDate": "Date", "Amount": "Dollars", "Item": "Category"},
     )
     fig.update_traces(
-        hovertemplate=("Item: %{fullData.name}<br>Date: %{x|%b %Y}<br>Amount: %{y}<extra></extra>")
+        hovertemplate=("Item: %{fullData.name}<br>Date: %{x|%b %Y}<br>Amount: %{y}<extra></extra>"),
     )
     fig.update_layout(barmode="stack")
 
@@ -283,7 +297,7 @@ def _monthly_line_graph(
         labels={"MonthDate": "Date", "Amount": "Dollars", "Item": "Category"},
     )
     fig.update_traces(
-        hovertemplate=("Item: %{fullData.name}<br>Date: %{x|%b %Y}<br>Amount: %{y}<extra></extra>")
+        hovertemplate=("Item: %{fullData.name}<br>Date: %{x|%b %Y}<br>Amount: %{y}<extra></extra>"),
     )
     _apply_redaction(fig, redact_values)
     return fig
@@ -313,10 +327,10 @@ def _yearly_pie_charts(
         total = grouped["Amount"].sum()
         percentages = grouped["Amount"] / total
         text = [
-            label if pct >= 0.005 else ""
+            label if pct >= MIN_PIE_CHART_PERCENT else ""
             for label, pct in zip(grouped[column], percentages, strict=False)
         ]
-        year_int = int(cast(int, year))
+        year_int = int(cast("int", year))
         fig = pie(
             grouped,
             names=column,
@@ -332,7 +346,7 @@ def _yearly_pie_charts(
             ),
         )
         fig.update_layout(
-            margin=dict(t=80, b=20, l=50, r=50),
+            margin={"t": 80, "b": 20, "l": 50, "r": 50},
             height=700,
             uniformtext_minsize=10,
             uniformtext_mode="hide",
@@ -347,11 +361,11 @@ def _load_dataframe(workbook_path: Path) -> DataFrame:
     xls = pd.ExcelFile(workbook_path)
     numeric_sheet_names = [s for s in xls.sheet_names if str(s).isdigit()]
     if not numeric_sheet_names:
-        print("No numeric sheets found.")
+        print("No numeric sheets found.")  # noqa: T201
         return pd.DataFrame()
-    print(
+    print(  # noqa: T201
         f"{len(numeric_sheet_names)} sheets spanning from "
-        f"{min(numeric_sheet_names)}-{max(numeric_sheet_names)}"
+        f"{min(numeric_sheet_names)}-{max(numeric_sheet_names)}",
     )
 
     dfs: list[DataFrame] = []

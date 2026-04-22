@@ -23,27 +23,11 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = [
-    "E",
-    "W",
-    "F",
-    "I",
-    "B",
-    "UP",
-]
+select = ["ALL"]
 ignore = [
-    "E501",   # handled by formatter
-    "B008",   # common in Dash callbacks (default arg in functions)
-    "B006",   # mutable defaults often appear in Dash configs
-    "F841",   # often noisy in callback-heavy pipelines (unused locals)
-]
-
-[tool.ruff.lint.per-file-ignores]
-"**/callbacks/*.py" = [
-    "F811",  # redefined functions (common with Dash callbacks)
-]
-"**/app.py" = [
-    "F401",  # unused imports (Dash imports often required implicitly)
+    "FBT001", # Boolean-typed positional argument in function definition
+    "FBT002", # Boolean default positional argument in function definition
+    "PLR0913", # Too many arguments in function definition
 ]
 
 [tool.ruff.format]
@@ -60,6 +44,8 @@ exclude = [
     "**/__pycache__",
     "**/.venv",
     "**/dist",
-    "**/build"]
+    "**/build",
+    "**/node_modules",
+    "**/.*"]
 
 reportMissingImports = true

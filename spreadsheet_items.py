@@ -1,7 +1,11 @@
+"""All possible items within workbook."""
+
 from enum import StrEnum
 
 
 class Column(StrEnum):
+    """Column enum type."""
+
     ENTRY = "Entry"
     AMOUNT = "Amount"
     VENDER = "Vender"
@@ -12,6 +16,8 @@ class Column(StrEnum):
 
 
 class Vender(StrEnum):
+    """Vender enum type."""
+
     HOME_DEPOT = "Home Depot"
     AMAZON = "Amazon"
     KROGER = "Kroger"
@@ -55,6 +61,8 @@ class Vender(StrEnum):
 
 
 class PaymentType(StrEnum):
+    """PaymentType enum type."""
+
     CAPITALONE_MASTER = "CapitalOne Master"
     GEVISA = "GEVisa"
     ECHECK = "ECheck"
@@ -64,6 +72,8 @@ class PaymentType(StrEnum):
 
 
 class Category(StrEnum):
+    """Category enum type."""
+
     HOUSE_IMPROVEMENT = "House/Improvement"
     FOOD = "Food"
     TAKEOUT = "Takeout"
@@ -95,6 +105,8 @@ class Category(StrEnum):
 
 
 class Project(StrEnum):
+    """Project enum type."""
+
     HOUSE_PAINT = "House Paint"
     HOUSE_ROOF = "House Roof"
     HOUSE_YARD = "House Yard"
@@ -134,6 +146,7 @@ MONTHS = [
 
 
 def get_options(column: Column) -> list[str]:
+    """Get all options within a column as a list."""
     match column:
         case Column.VENDER:
             return [v.value for v in Vender]

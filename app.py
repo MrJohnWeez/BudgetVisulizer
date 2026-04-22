@@ -1,3 +1,5 @@
+"""Main app control."""
+
 import argparse
 import webbrowser
 from pathlib import Path
@@ -12,6 +14,7 @@ REDACT_VALUES = False
 
 
 def run_app() -> None:
+    """Run main dash app."""
     parser = argparse.ArgumentParser(description="Budget Visualizer")
     parser.add_argument(
         "--file",
@@ -32,7 +35,8 @@ def run_app() -> None:
             _create_plot_section("Yearly Vender Summary", data_loader.get_vender_pie_charts()),
             _create_plot_section("Yearly Category Summary", data_loader.get_category_pie_charts()),
             _create_plot_section(
-                "Yearly Payment Summary", data_loader.get_payment_type_pie_charts()
+                "Yearly Payment Summary",
+                data_loader.get_payment_type_pie_charts(),
             ),
             _create_plot_section("Yearly Project Summary", data_loader.get_project_pie_charts()),
         ],
@@ -77,7 +81,8 @@ def _create_stats_section(title: str, values: list[tuple[str, str]]) -> html.Div
     )
 
 
-def open_browser():
+def open_browser() -> None:
+    """Auto open browser."""
     webbrowser.open("http://127.0.0.1:8050/")
 
 
