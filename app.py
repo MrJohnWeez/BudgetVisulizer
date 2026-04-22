@@ -10,7 +10,7 @@ from plotly.graph_objs import Figure
 from data_loader import DataLoader
 
 WORKBOOK_NAME = "Assets/Budget.xlsx"
-REDACT_VALUES = False
+REDACT_VALUES = True
 
 
 def run_app() -> None:
