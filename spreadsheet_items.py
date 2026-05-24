@@ -127,6 +127,7 @@ class Project(StrEnum):
     LIVINGROOM_MOLDING = "Livingroom Molding"
     GENERAL_PLUMBING = "General Plumbing"
     BASEMENT_REMODEL = "Basement Remodel"
+    FLOORING = "Flooring"
 
 
 MONTHS = [
