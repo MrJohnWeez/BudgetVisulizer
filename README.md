@@ -11,11 +11,14 @@ Quick python project that:
 
 1. Install [UV](https://docs.astral.sh/uv/getting-started/installation/)
 2. Open terminal and run `uv sync`
-3. Run `uv run app.py --file Assets/ExampleBudget.xlsx`
 
 # Run
 
-`uv run app.py --file Assets/Budget.xlsx`
+Example Budget provided was AI generated to avoid personal information but still provide a plausible data log.
+
+`uv run app.py --file Assets/ExampleBudget.xlsx`
+
+or modify dev/run scripts (linux or windows)
 
 # Provided Example
 
