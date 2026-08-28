@@ -1,4 +1,7 @@
-"""All possible items within workbook."""
+"""All possible items within workbook.
+
+Could be dynamically generated from Data sheet at the cost of less strict types
+"""
 
 from enum import StrEnum
 
@@ -58,6 +61,7 @@ class Vender(StrEnum):
     BAKER_CABINETS = "Baker Cabinets"
     DISNEY_PLUS = "Diseny Plus"
     CABINETS_COM = "Cabinets com"
+    CLOUDFLARE = "Cloudflare"
 
 
 class PaymentType(StrEnum):
@@ -102,6 +106,7 @@ class Category(StrEnum):
     SOCIAL = "Social"
     DONATION = "Donation"
     GAMBLE = "Gamble"
+    BONUS = "Bonus"
 
 
 class Project(StrEnum):

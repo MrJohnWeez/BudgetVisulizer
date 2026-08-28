@@ -32,5 +32,6 @@
     ],
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
-    "files.autoSave": "onFocusChange"
+    "files.autoSave": "onFocusChange",
+    "workbench.browser.openLocalhostLinks": false
 }

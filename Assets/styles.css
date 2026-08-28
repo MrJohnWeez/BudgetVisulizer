@@ -24,7 +24,7 @@ body {
   overflow: hidden;
 }
 
-/* Scroll container */
+/* MARK: Scroll container */
 .scroll-container {
   display: flex;
   flex-direction: column;
@@ -51,7 +51,7 @@ body {
   background: var(--highlight-blue);
 }
 
-/* Grid layout */
+/* MARK: Grid layout */
 .grid-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -68,7 +68,7 @@ body {
     grid-template-columns: 1fr;
 }
 
-/* Sections */
+/* MARK: Sections */
 .section {
   display: flex;
   flex-direction: column;
@@ -89,7 +89,7 @@ body {
   border-top-right-radius: var(--radius);
 }
 
-/* Stat pills */
+/* MARK: Stat pills */
 .stat-pill {
   display: flex;
   flex-direction: row;
@@ -112,7 +112,7 @@ body {
   line-height: 1.2;
 }
 
-/* Graph container */
+/* MARK: Graph container */
 .graph {
   display: block;
   padding: var(--spacing-xs);
