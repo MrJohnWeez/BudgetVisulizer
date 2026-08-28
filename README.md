@@ -12,26 +12,34 @@ Quick python project that:
 1. Install [UV](https://docs.astral.sh/uv/getting-started/installation/)
 2. Open terminal and run `uv sync`
 
-# Run
-
-Example Budget provided was AI generated to avoid personal information but still provide a plausible data log.
+# Provided Synthetic Example
 
 `uv run app.py --file Assets/ExampleBudget.xlsx`
 
 or modify dev/run scripts (linux or windows)
 
-# Provided Example
+Example Budget provided was AI generated to avoid personal information but still provide a plausible data log.
 
-Note that the example excel file is incomplete and has been randomly generated.
+![Example car trailer costs plot](Docs/Images/car-trailer-costs.png)
 
-**Multiple months worth of real data generate interesting plots rather than the plain ones below.**
+![Example category plot](Docs/Images/category.png)
 
-![Example Tree Plot](Docs/Images/Tree_Plot.png)
+![Example food costs plot](Docs/Images/food-costs.png)
 
-![Example Payment Type Plot](Docs/Images/PaymentType.png)
+![Example house projects plot](Docs/Images/house-projects.png)
 
-![Example Project Plot](Docs/Images/Project.png)
+![Example image plot](Docs/Images/image.png)
 
-![Example Vender Plot](Docs/Images/Vender.png)
+![Example payment-type plot](Docs/Images/payment-type.png)
 
-![Example Whole Dash App Webpage](Docs/Images/Whole_Webpage.png)
+![Example project plot](Docs/Images/project.png)
+
+![Example stores plot](Docs/Images/stores.png)
+
+![Example subscriptions plot](Docs/Images/subscriptions.png)
+
+![Example total spent on house plot](Docs/Images/total-spent-on-house.png)
+
+![Example utility cost plot](Docs/Images/utility-cost.png)
+
+![Example vender plot](Docs/Images/vender.png)
