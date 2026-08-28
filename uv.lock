@@ -25,6 +25,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "dash" },
+    { name = "dash2html" },
     { name = "openpyxl" },
     { name = "pandas" },
     { name = "plotly" },
@@ -33,6 +34,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "dash", specifier = ">=4.0.0" },
+    { name = "dash2html", specifier = ">=1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=3.0.1" },
     { name = "plotly", specifier = ">=6.6.0" },
@@ -143,6 +145,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/20/dd/3aed9bfd81dfd8f44b3a5db0583080ac9470d5e92ee134982bd5c69e286e/dash-4.0.0.tar.gz", hash = "sha256:c5f2bca497af288f552aea3ae208f6a0cca472559003dac84ac21187a1c3a142", size = 6943263, upload-time = "2026-02-03T19:42:27.92Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0b/8c/dd63d210b28a7589f4bc1e84880525368147425c717d12834ab562f52d14/dash-4.0.0-py3-none-any.whl", hash = "sha256:e36b4b4eae9e1fa4136bf4f1450ed14ef76063bc5da0b10f8ab07bd57a7cb1ab", size = 7247521, upload-time = "2026-02-03T19:42:25.01Z" },
+]
+
+[[package]]
+name = "dash2html"
+version = "1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dash" },
+    { name = "flask" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/29/88/bf4065049152a9348e4e78f7786e21620a9e4bdd8af6031588f3edd789cd/dash2html-1.tar.gz", hash = "sha256:2e96257bebeb5dda745d623d9f24ed47343a9959788a40a829a7dac09017e0fa", size = 3649, upload-time = "2025-01-25T17:42:29.032Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1f/cc/62cee098d2555ef37338ab2b947f41e254ca52d66d2f2beb825f6dc10dd1/dash2html-1-py3-none-any.whl", hash = "sha256:483be71b20edefd36553088ac5ee078fff641f66caea8565909de45a2937a0a1", size = 3927, upload-time = "2025-01-25T17:42:26.854Z" },
 ]
 
 [[package]]

@@ -12,6 +12,13 @@ Quick python project that:
 1. Install [UV](https://docs.astral.sh/uv/getting-started/installation/)
 2. Open terminal and run `uv sync`
 
+# Command Structure
+
+`uv run app.py --file Path_To_Excel_file.xlsx --build`
+
+- `--file` path of excel file to parse
+- `--build` create zip file of html page to download
+
 # Provided Synthetic Example
 
 `uv run app.py --file Assets/ExampleBudget.xlsx`

@@ -5,7 +5,9 @@ import webbrowser
 from pathlib import Path
 
 from dash import Dash, dcc, html
+from dash2html import dash2html
 from plotly.graph_objs import Figure
+import sys, traceback
 
 from data_loader import DataLoader
 
@@ -22,8 +24,14 @@ def run_app() -> None:
         required=True,
         help="Path to the Excel workbook",
     )
+    parser.add_argument(
+        "--build",
+        action="store_true",
+        help="Create build of html page",
+    )
     args = parser.parse_args()
     workbook_path = Path(args.file)
+    create_build = args.build
 
     data_loader = DataLoader(workbook_path, REDACT_VALUES)
     data_loader.load_data()
@@ -42,7 +50,11 @@ def run_app() -> None:
         ],
         className="scroll-container",
     )
-    app.run(debug=True)
+    if create_build:
+        app.run_server = app.run  # pyright: ignore[reportAttributeAccessIssue]
+        dash2html(app, port=8050)
+    else:
+        app.run(debug=True)
 
 
 def _create_plot_section(title: str, plots: list[Figure]) -> html.Div:
